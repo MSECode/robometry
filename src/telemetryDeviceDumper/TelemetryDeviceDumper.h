@@ -205,6 +205,7 @@ private:
         yarp::dev::IInteractionMode* imod{ nullptr };
         yarp::dev::ITorqueControl* itrq{ nullptr };
         yarp::dev::IMultipleWrapper* multwrap{ nullptr };
+        yarp::dev::IMotor* imot{ nullptr };
     } remappedControlBoardInterfaces;
 
     yarp::dev::Nav2D::ILocalization2D* iloc{nullptr};
@@ -216,7 +217,7 @@ private:
     std::vector<double> jointPos, jointVel, jointAcc, jointPosErr, jointPosRef,
                         jointTrqErr, jointTrqRef, jointPWM, jointCurr, jointTrq,
                         motorEnc, motorVel, motorAcc, controlModes, interactionModes,
-                        odometryData;
+                        odometryData, motorTemp;
 
     std::map<std::string, std::vector<std::int32_t>> rawDataValuesMap;
 

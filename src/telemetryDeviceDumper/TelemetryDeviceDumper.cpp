@@ -123,6 +123,11 @@ bool TelemetryDeviceDumper::loadSettingsFromConfig(yarp::os::Searchable& config)
     {
         settings.logIRawValuesPublisher = prop.find(logIRawValuesPublisherOptionName.c_str()).asBool();
     }
+
+    std::string logIMotorsOptionName = "logIMotors";
+    if (prop.check(logIMotorsOptionName.c_str())) {
+        settings.logIMotors = prop.find(logIMotorsOptionName.c_str()).asBool();
+    }
     
     std::string useRadians = "useRadians";
     if (prop.check(useRadians.c_str())) {
@@ -327,6 +332,9 @@ bool TelemetryDeviceDumper::openRemapperControlBoard(yarp::os::Searchable& confi
     if (settings.logControlBoardQuantities || settings.logITorqueControl) {
         ok = ok && remappedControlBoard.view(remappedControlBoardInterfaces.itrq);
     }
+    if (settings.logControlBoardQuantities || settings.logIMotors) {
+        ok = ok && remappedControlBoard.view(remappedControlBoardInterfaces.imot);
+    }
     if (!ok)
     {
         yError() << "telemetryDeviceDumper: open impossible to use the necessary interfaces in remappedControlBoard";
@@ -389,6 +397,7 @@ void TelemetryDeviceDumper::resizeBuffers(int size) {
     this->motorAcc.resize(size);
     this->controlModes.resize(size);
     this->interactionModes.resize(size);
+    this->motorTemp.resize(size);
     // OdometryData has 9 fields
     this->odometryData.resize(9);
     this->rawDataValuesMap.clear();
@@ -428,6 +437,10 @@ bool TelemetryDeviceDumper::configBufferManager(yarp::os::Searchable& conf) {
         ok = ok && bufferManager.addChannel({ "motors_state::positions", {motorEnc.size(), 1}, m_bufferConfig.description_list });
         ok = ok && bufferManager.addChannel({ "motors_state::velocities", {motorVel.size(), 1}, m_bufferConfig.description_list });
         ok = ok && bufferManager.addChannel({ "motors_state::accelerations", {motorAcc.size(), 1}, m_bufferConfig.description_list });
+    }
+
+    if (ok && (settings.logIMotors || settings.logControlBoardQuantities)) {
+        ok = ok && bufferManager.addChannel({ "motors_state::temperature", {motorTemp.size(), 1}, m_bufferConfig.description_list, {"C"} });
     }
 
     if (ok && (settings.logIControlMode || settings.logControlBoardQuantities)) {
@@ -644,7 +657,7 @@ void TelemetryDeviceDumper::readSensors()
         }
     }
 
-    // Read motor
+    // Read motorencoders
     if (settings.logIMotorEncoders || settings.logControlBoardQuantities) {
         ok = remappedControlBoardInterfaces.imotenc->getMotorEncoders(motorEnc.data());
         sensorsReadCorrectly = sensorsReadCorrectly && ok;
@@ -719,6 +732,21 @@ void TelemetryDeviceDumper::readSensors()
         else
         {
             bufferManager.push_back(interactionModes, "joints_state::interaction_mode");
+        }
+    }
+
+    // Read motor
+    if (settings.logIMotors || settings.logControlBoardQuantities) 
+    {
+        ok = remappedControlBoardInterfaces.imot->getMotorTemperature(motorTemp.data());
+        sensorsReadCorrectly = sensorsReadCorrectly && ok;
+        if (!ok)
+        {
+            yWarning() << "telemetryDeviceDumper warning : motor temperature was not read correctly";
+        }
+        else
+        {
+            bufferManager.push_back(motorTemp, "motors_state::temperature");
         }
     }
 
