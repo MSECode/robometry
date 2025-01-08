@@ -50,6 +50,7 @@ struct TelemetryDeviceDumperSettings {
     bool logIAmplifierControl{ false };
     bool logILocalization2D{ false };
     bool logIRawValuesPublisher { false };
+    bool logIMotors { false };
     bool useRadians{ false };
     bool saveBufferManagerConfiguration{ false };
     std::string localizationRemoteName{ "" };

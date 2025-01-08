@@ -738,7 +738,7 @@ void TelemetryDeviceDumper::readSensors()
     // Read motor
     if (settings.logIMotors || settings.logControlBoardQuantities) 
     {
-        ok = remappedControlBoardInterfaces.imot->getMotorTemperature(motorTemp.data());
+        ok = remappedControlBoardInterfaces.imot->getTemperatures(motorTemp.data());
         sensorsReadCorrectly = sensorsReadCorrectly && ok;
         if (!ok)
         {
